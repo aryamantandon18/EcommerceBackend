@@ -7,12 +7,12 @@ import bodyParser from 'body-parser';
 import { errorMiddleWare } from './middleWares/error.js';
 import orderRouter from './routes/order.js'
 import paymentRouter from './routes/paymentRoutes.js'
-import { fileURLToPath } from 'url';
-import path from 'path';
+// import { fileURLToPath } from 'url';
+// import path from 'path';
 
-// Resolve __dirname using import.meta.url
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// // Resolve __dirname using import.meta.url
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
 
 export const app = express();
 import cors from 'cors'
@@ -39,10 +39,10 @@ app.use(productRouter);
 app.use(orderRouter);
 app.use(paymentRouter);
 
-app.use(express.static(path.join(__dirname,'../client/build')));
-app.get('*',(req,res)=>{
-    res.sendFile(path.resolve(__dirname,'../client/build'));
-});
+// app.use(express.static(path.join(__dirname,'../client/build')));
+// app.get('*',(req,res)=>{
+//     res.sendFile(path.resolve(__dirname,'../client/build'));
+// });
 
 app.get("/",(req,res)=>{
     res.send("Nice Working"); 
