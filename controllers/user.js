@@ -70,11 +70,11 @@ export const Login = async(req,res,next)=>{
 };
 export const getMyProfile = async(req,res,next)=>{
   console.log("Before user")
-  const user = await Users.findById(req.user._id);
-console.log(user);
+  // const user = await Users.findById(req.user._id);
+// console.log(user);
    res.status(201).json({
         success : true,
-        user,
+        user:req.user,
     })
 };
 
