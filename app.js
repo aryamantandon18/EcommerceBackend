@@ -32,7 +32,7 @@ app.use(fileUpload());
 app.use(cors({
     origin:`${process.env.frontend_uri}`,                // Specify the allowed origins
     method:["GET",'POST','PUT','DELETE'],                // Specify the allowed HTTP methods
-    credentials:true,       // Allow credentials (e.g., cookies) to be sent             
+    credentials: true,       // Allow credentials (e.g., cookies) to be sent             
 }))
 
 app.use("/users",userRouter);
