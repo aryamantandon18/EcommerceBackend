@@ -28,8 +28,9 @@ app.use(express.urlencoded({extended:true,limit: '30mb'}))
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended:true,limit: '30mb' })); // so that we can access data from req.body 
 app.use(fileUpload());
+
 app.use(cors({
-    origin:[process.env.frontend_uri],                // Specify the allowed origins
+    origin:`${process.env.frontend_uri}`,                // Specify the allowed origins
     method:["GET",'POST','PUT','DELETE'],                // Specify the allowed HTTP methods
     credentials:true,       // Allow credentials (e.g., cookies) to be sent             
 }))
