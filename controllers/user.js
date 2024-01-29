@@ -80,13 +80,13 @@ console.log(user);
 
 export const logout = (req,res) => {
     res.status(200).cookie("Token","",{
-      expires: new Date(Date.now()),
+      httpOnly: true,
+      maxAge: 0,
       sameSite: process.env.node_env === "Develpoment" ? "lax" : "none",
       secure: process.env.node_env === "Develpoment" ? false : true,          
  })
     .json({
       success:true,
-      user:req.user,
       message:"Logged out successfully",
     })
 }
