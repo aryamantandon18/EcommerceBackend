@@ -14,7 +14,7 @@ const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
   crop:"scale,"
 })
 
-   const {name,email,password} = req.body;
+   const {name,email,password,role} = req.body;
   let user = await Users.findOne({email})
 
   if(user){
@@ -28,7 +28,7 @@ const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
   avatar:{
     public_id:myCloud.public_id,
     url:myCloud.secure_url,
-  }
+  },role
   });
 
  sendCookie(res,user,"Registered Successfully")

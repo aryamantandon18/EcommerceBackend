@@ -6,9 +6,9 @@ import { deleteOrder, getAllOrders, getSingleOrder, myOrders, newOrder, updateOr
 router.post("/order/new",isAuthenticated,newOrder);
 router.get("/order/me",isAuthenticated,myOrders);
 router.get("/order/:id",isAuthenticated,getSingleOrder);
-router.get("/admin/orders",isAuthenticated,authorizeRole("admin"),getAllOrders);
+router.get("/admin/orders",isAuthenticated,authorizeRole("Admin"),getAllOrders);
 router.route("/admin/order/:id")
-.put(isAuthenticated,authorizeRole("admin"),updateOrder)
-.delete(isAuthenticated,authorizeRole("admin"),deleteOrder);
+.put(isAuthenticated,authorizeRole("Admin"),updateOrder)
+.delete(isAuthenticated,authorizeRole("Admin"),deleteOrder);
 
 export default router

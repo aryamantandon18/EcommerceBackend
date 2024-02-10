@@ -35,6 +35,7 @@ export const newProduct = asyncHandler(async(req,res,next)=>{
 //Get All products for Admin
 export const getAdminProducts = asyncHandler(async(req,res,next)=>{
  const products = await Product.find();
+ if(!products) return next(new ErrorHandler("Product not found",404));
     res.status(200).json({
         success:true,
         products,

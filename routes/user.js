@@ -13,12 +13,12 @@ router.get("/logout",logout);
 router.put("/password/update",isAuthenticated,updatePassword);
 router.put("/me/update",isAuthenticated,updateProfile);
 
-router.get("/admin/users",isAuthenticated,authorizeRole("admin"),getAllUsers);
+router.get("/admin/users",isAuthenticated,authorizeRole("Admin"),getAllUsers);
 
 router.route("/admin/user/:id")
-.get(isAuthenticated,authorizeRole("admin"),getUserById)
-.put(isAuthenticated,authorizeRole("admin"),updateRole)
-.delete(isAuthenticated,authorizeRole("admin"),deleteUser)
+.get(isAuthenticated,authorizeRole("Admin"),getUserById)
+.put(isAuthenticated,authorizeRole("Admin"),updateRole)
+.delete(isAuthenticated,authorizeRole("Admin"),deleteUser)
 
 
 

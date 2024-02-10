@@ -51,6 +51,7 @@ export const myOrders = asyncHandler(async(req,res,next)=>{
   try {
     console.log("User:", req.user);
     const orders = await Order.find({user:req.user._id});
+    console.log(orders);
     res.status(200).json({
         success:true,
         orders
