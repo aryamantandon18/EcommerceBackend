@@ -44,7 +44,7 @@ export const getAdminProducts = asyncHandler(async(req,res,next)=>{
 
 export const getAllProducts = asyncHandler(async(req,res,next)=>{
    // return next(new ErrorHandler("This is an error message",404));
-   const resultPerPage = 4;
+   const resultPerPage = 8;
    const productsCount = await Product.countDocuments();
    const apiFeature = new ApiFeatures(Product.find(), req.query)   // query , querystr
     .search()
@@ -58,7 +58,7 @@ export const getAllProducts = asyncHandler(async(req,res,next)=>{
     res.status(200).json({
         success:true,
         message:"Here are all the users",
-        products,
+        products, 
         productsCount,
         resultPerPage,
         filteredProductsCount,
@@ -70,9 +70,36 @@ export const updateProduct = asyncHandler(async(req,res,next)=>{
    if(!product){
       return next(new ErrorHandler("Product not found",404));
    }
+   //images
+   let images = [];
+   if(typeof req.body.images == 'string'){
+    images.push(req.body.images);
+   }else{
+    images = req.body.images;
+   }
+   if(images!==undefined){
+      //deleting old imsges from cloudinary
+   for (let i = 0; i < product.images.length; i++) {
+      await cloudinary.v2.uploader.destroy(product.images[i].public_id);
+      }
+
+   const imagesLinks=[];
+   for(let i=0;i<images.length;i++){
+    const result = await cloudinary.v2.uploader.upload(images[i],{
+       folder:"products",
+    });
+ 
+    imagesLinks.push({
+       public_id: result.public_id,
+       url:result.secure_url,
+    })
+   }
+   req.body.images = imagesLinks;
+}
+
    product = await Product.findByIdAndUpdate(req.params.id,req.body,{
       new:true,
-      runValidators: true,
+      runValidators: true,    //Ensures that the update operation validates against the model's schema.
       useFindAndModify:false
 
    });

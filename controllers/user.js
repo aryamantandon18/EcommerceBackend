@@ -249,7 +249,7 @@ res.json(200).json({
 
  //get all users (admin)
   export const getAllUsers = asyncHandler(async(req,res,next)=>{
-    const users = Users.find();
+    const users = await Users.find();
     res.status(200).json({
       success:true,
       users,
@@ -258,7 +258,7 @@ res.json(200).json({
 
   //get single user (admin)
   export const getUserById = asyncHandler(async(req,res)=>{
-    const user = Users.findById(req.params.id);
+    const user =await Users.findById(req.params.id);
     if(!user){
     return next(new ErrorHandler(`No user exist with id -> ${req.params.id}`)); 
     }
