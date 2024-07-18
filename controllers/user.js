@@ -11,7 +11,7 @@ export const register = asyncHandler(async(req,res,next)=>{
 const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
   folder:"avatars",
   width:150,
-  crop:"scale,"
+  crop:"scale"
 })
 
    const {name,email,password,role} = req.body;
@@ -19,8 +19,8 @@ const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
 
   if(user){
     return res.status(404).json({
-      message:"User already exist",
       success: false,
+      message:"User already exist",
     })
   }
   // const hashedPassword = await bcrypt.hash(password,10);

@@ -4,7 +4,7 @@ import productRouter from './routes/product.js'
 import {config} from 'dotenv'
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
-import { errorMiddleWare } from './middleWares/error.js';
+import ErrorHandler, { errorMiddleWare } from './middleWares/error.js';
 import orderRouter from './routes/order.js'
 import paymentRouter from './routes/paymentRoutes.js'
 // import { fileURLToPath } from 'url';
@@ -50,6 +50,10 @@ app.get("/",(req,res)=>{
     res.send("Nice Working"); 
 })
 app.use(errorMiddleWare);
+
+app.all('*',(req,res,next)=>{
+ return next(new ErrorHandler(`Can't find ${req.originalUrl} on the server!`,404))
+})
 
 
 
