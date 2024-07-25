@@ -232,19 +232,21 @@ export const resetPassword = asyncHandler(async(req,res,next)=>{
   })
      
   //admin
-  export const deleteUser = asyncHandler(async(req,res,next)=>{
-  await Users.findOneAndDelete(req.params.id,(err,deletedDoc)=>{
-    if(deletedDoc == null)   return next(new ErrorHandler(`User not exist with id -> ${req.params.id}`))
-    if(err){
+  export const deleteUser = asyncHandler(async (req, res, next) => {
+    try {
+      const deletedDoc = await Users.findOneAndDelete({ _id: req.params.id });
+      if (!deletedDoc) {
+        return next(new ErrorHandler(`User not exist with id -> ${req.params.id}`));
+      }
+      res.status(200).json({
+        success: true,
+        message: 'User deleted successfully',
+        data: deletedDoc,
+      });
+    } catch (err) {
       next(err);
     }
-  })
-  
-res.json(200).json({
-      success:true,
-      message:"User deleted successfully"
-    })
-  })
+  });
       
 
  //get all users (admin)
