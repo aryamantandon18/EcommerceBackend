@@ -39,7 +39,7 @@ const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
 export const Login = async(req,res,next)=>{
  try {
   const {email,password} = req.body;
-  console.log("Hello")
+  // console.log("Hello")
   if (!email || !password) {
     return next(new ErrorHandler("Please Enter Email & Password",400));
   }
@@ -69,9 +69,9 @@ export const Login = async(req,res,next)=>{
  }
 };
 export const getMyProfile = async(req,res,next)=>{
-  console.log("Before user")
+  // console.log("Before user")
   const user = await Users.findById(req.user._id);
-console.log(user);
+// console.log(user);
    res.status(201).json({
         success : true,
         user,

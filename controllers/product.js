@@ -65,51 +65,68 @@ export const getAllProducts = asyncHandler(async(req,res,next)=>{
      })
 });
 
-export const updateProduct = asyncHandler(async(req,res,next)=>{
-   let product  = await Product.findById(req.params.id);
-   if(!product){
-      return next(new ErrorHandler("Product not found",404));
-   }
-   //images
-   let images = [];
-   if(typeof req.body.images == 'string'){
-    images.push(req.body.images);
-   }else{
-    images = req.body.images;
-   }
-   if(images!==undefined){
-      //deleting old imsges from cloudinary
-   for (let i = 0; i < product.images.length; i++) {
-      await cloudinary.v2.uploader.destroy(product.images[i].public_id);
-      }
-
-   const imagesLinks=[];
-   for(let i=0;i<images.length;i++){
-    const result = await cloudinary.v2.uploader.upload(images[i],{
-       folder:"products",
-    });
+export const updateProduct = asyncHandler(async (req, res, next) => {
+   try {
+     let product = await Product.findById(req.params.id);
+     if (!product) {
+       return next(new ErrorHandler("Product not found", 404));
+     }
  
-    imagesLinks.push({
-       public_id: result.public_id,
-       url:result.secure_url,
-    })
+     let images = [];
+     if (typeof req.body.images === 'string') {
+       images.push(req.body.images);
+     } else if (Array.isArray(req.body.images)) {
+       images = req.body.images;
+     }
+ 
+     if (images.length > 0) {
+       // Deleting old images from Cloudinary
+       for (let i = 0; i < product.images.length; i++) {
+         try {
+           await cloudinary.v2.uploader.destroy(product.images[i].public_id);
+         } catch (error) {
+           console.error("Error deleting image:", error);
+         }
+       }
+ 
+       const imagesLinks = [];
+       for (let i = 0; i < images.length; i++) {
+         try {
+           if (typeof images[i] === 'string') {
+             const result = await cloudinary.v2.uploader.upload(images[i], {
+               folder: "products",
+             });
+             imagesLinks.push({
+               public_id: result.public_id,
+               url: result.secure_url,
+             });
+           } else {
+             console.error("Invalid image format:", images[i]);
+           }
+         } catch (error) {
+           console.error("Error uploading image:", error);
+         }
+       }
+       req.body.images = imagesLinks;
+     }
+ 
+     product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+       new: true,
+       runValidators: true,
+       useFindAndModify: false,
+     });
+ 
+     res.status(200).json({
+       success: true,
+       message: "Product updated",
+       product,
+     });
+   } catch (error) {
+     console.error("Internal Server Error:", error);
+     return next(new ErrorHandler("Internal Server Error", 500));
    }
-   req.body.images = imagesLinks;
-}
-
-   product = await Product.findByIdAndUpdate(req.params.id,req.body,{
-      new:true,
-      runValidators: true,    //Ensures that the update operation validates against the model's schema.
-      useFindAndModify:false
-
-   });
-   res.status(200).json({
-      success:true,
-      message:"product updated",
-      product
-   })
-      
-});
+ });
+ 
 export const deleteProduct = asyncHandler(async (req, res) => {
    const product =  await Product.findById(req.params.id)
    if(product){
