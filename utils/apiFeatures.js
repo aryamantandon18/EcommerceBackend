@@ -16,13 +16,25 @@ class ApiFeatures {
       return this;
     }
     filter() {
-      const queryCopy = { ...this.queryStr };        
+      const queryCopy = { ...this.queryStr };
+  
+      // Removing fields from the query that are not relevant to filtering
       const removeFields = ["keyword", "page", "limit"];
       removeFields.forEach((key) => delete queryCopy[key]);
-      // Filter For Price and Rating 
+  
+      // Filter For Price, Rating, and Category
       let queryStr = JSON.stringify(queryCopy);
-      queryStr = queryStr.replace(/\b(gt|gte|lt|lte)\b/g, (key) => `$${key}`);    //replacing gt -> $gt , gte-> $gte  bcoz mongodb operators are like this.
-      this.query = this.query.find(JSON.parse(queryStr));
+      queryStr = queryStr.replace(/\b(gt|gte|lt|lte)\b/g, (key) => `$${key}`);
+  
+      // Parsing the query string back to an object
+      const queryObj = JSON.parse(queryStr);
+  
+      // Handle category filtering
+      if (this.queryStr.category) {
+        queryObj.category = this.queryStr.category;
+      }
+  
+      this.query = this.query.find(queryObj);
       return this;
     }
     pagination(resultPerPage) {
