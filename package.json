@@ -8,8 +8,10 @@
     "node": ">=14.20.1"
   },
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "start.bat",
+    "dev": "nodemon server.js",
+    "node":"node server.js"
+    
   },
   "keywords": [],
   "author": "",
@@ -24,6 +26,7 @@
     "express": "^4.18.2",
     "express-async-handler": "^1.2.0",
     "express-fileupload": "^1.4.2",
+    "ioredis": "^5.4.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.6.0",
     "nodemailer": "^6.9.5",

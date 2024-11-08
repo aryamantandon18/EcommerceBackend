@@ -7,12 +7,6 @@ import bodyParser from 'body-parser';
 import ErrorHandler, { errorMiddleWare } from './middleWares/error.js';
 import orderRouter from './routes/order.js'
 import paymentRouter from './routes/paymentRoutes.js'
-// import { fileURLToPath } from 'url';
-// import path from 'path';
-
-// // Resolve __dirname using import.meta.url
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = path.dirname(__filename);
 
 export const app = express();
 import cors from 'cors'
@@ -40,14 +34,8 @@ app.use(productRouter);
 app.use(orderRouter);
 app.use(paymentRouter);
 
-// __dirname -> it is the current directory name 
-// app.use(express.static(path.join(__dirname,'../client/build')));
-// app.get('*',(req,res)=>{
-//     res.sendFile(path.resolve(__dirname,'../client/build'));
-// });
-
 app.get("/",(req,res)=>{
-    res.send("Nice Working"); 
+    res.send(`Hello from Express Server ${process.pid}`); 
 })
 app.use(errorMiddleWare);
 
@@ -55,12 +43,18 @@ app.all('*',(req,res,next)=>{
  return next(new ErrorHandler(`Can't find ${req.originalUrl} on the server!`,404))
 })
 
+// import { fileURLToPath } from 'url';
+// import path from 'path';
 
+// Resolve __dirname using import.meta.url
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
 
-
-
-
-
+// __dirname -> it is the current directory name 
+// app.use(express.static(path.join(__dirname,'../client/build')));
+// app.get('*',(req,res)=>{
+//     res.sendFile(path.resolve(__dirname,'../client/build'));
+// });
 
 // put the dynamic route at the last bcoz JS(express) code is executed from top to bottom 
 // /users/:id  is a dynamic url
