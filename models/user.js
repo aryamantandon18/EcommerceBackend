@@ -46,6 +46,20 @@ const schema = new mongoose.Schema({
     
 })
 
+// Middleware to remove reviews from products when a user is deleted
+schema.pre('remove', async function (next) {
+    try {
+      // Find products that contain reviews by this user and remove those reviews
+      await Product.updateMany(
+        { 'reviews.user': this._id },
+        { $pull: { reviews: { user: this._id } } }
+      );
+      next();
+    } catch (error) {
+      next(error);
+    }
+  });
+
 schema.pre("save", async function (next) {
     if (!this.isModified("password")) {
       next();
