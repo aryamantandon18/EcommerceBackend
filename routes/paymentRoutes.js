@@ -6,7 +6,7 @@ import { isAuthenticated } from '../middleWares/auth.js';
 const router = express.Router();
 
 router.post("/payment/process",isAuthenticated,processPayment);
-router.get("/razorpayapikey",sendRazorpayApiKey);
-router.post("/payment/verification",paymentVerification);
+router.get("/razorpayapikey",isAuthenticated,sendRazorpayApiKey);
+router.post("/payment/verification",isAuthenticated,paymentVerification);
 
 export default router;

@@ -3,7 +3,6 @@ import Product from "../models/product.js";
 import {asyncHandler} from '../middleWares/AsyncErr.js'
 import ApiFeatures from "../utils/apiFeatures.js";
 import cloudinary from 'cloudinary';
-import mongoose from "mongoose";
 
 export const newProduct = asyncHandler(async(req,res,next)=>{
   let images = [];
@@ -240,35 +239,3 @@ await Product.findByIdAndUpdate(req.query.productId,{
      })
 })
          
-export const getReviewsByUserId = asyncHandler(async(req,res)=>{
-  const {userId} = req.params;
-  try {
-    const reviews = await Product.aggregate([
-      {
-        $match:{'reviews.user' :  new mongoose.Types.ObjectId(userId)}
-      },{
-        $unwind: '$reviews'
-      },{
-        $match:{'reviews.user':  new mongoose.Types.ObjectId(userId)}
-      },{
-        $project:{
-          productId:'$_id',
-          reviews:'$reviews'
-        }
-      }
-    ]);
-
-    if(reviews.length === 0){
-      return res.status(404).json({
-        message:"No reviews for this user"
-      })
-    }
-
-    return res.status(200).json(reviews)  
-
-  } catch (error) {
-    console.error("Line 270 in the productController",error);
-    return res.status(500).json({message:"Internal Server Error"})
-  }
-});
-

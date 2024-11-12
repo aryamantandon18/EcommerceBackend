@@ -91,6 +91,7 @@ export const logout = (req,res) => {
     })
 }
  
+//Forgot password 
 export const forgotPassword = asyncHandler(async(req,res,next)=>{ 
  const user = await Users.findOne({email: req.body.email});    //jab forgot pswd krega toh email toh daalega 
  if(!user){
@@ -268,6 +269,7 @@ export const resetPassword = asyncHandler(async(req,res,next)=>{
       user
     })
   })
+
 
 
 
