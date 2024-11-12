@@ -16,5 +16,7 @@ router.route("/product/review").put(isAuthenticated,createProductReview);
 router.route("/product/reviews")
 .get(getAllReviews)
 .delete(isAuthenticated,deleteReviews);
+router.get("/getReviewsForUser/:userId", isAuthenticated, getReviewsByUserId);
+router.post("/admin/products/reviews",getAllReviewsForAdmin);
 
 export default router

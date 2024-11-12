@@ -238,4 +238,129 @@ await Product.findByIdAndUpdate(req.query.productId,{
       success:true,
      })
 })
+
+export const getReviewsByUserId = asyncHandler(async(req,res)=>{
+  const {userId} = req.params;
+  try {
+    const reviews = await Product.aggregate([
+      {
+        $match:{'reviews.user' :  new mongoose.Types.ObjectId(userId)}
+      },{
+        $unwind: '$reviews'
+      },{
+        $match:{'reviews.user':  new mongoose.Types.ObjectId(userId)}
+      },{
+        $project:{
+          productId:'$_id',
+          reviews:'$reviews'
+        }
+      }
+    ]);
+
+    if(reviews.length === 0){
+      return res.status(404).json({
+        message:"No reviews for this user"
+      })
+    }
+
+    return res.status(200).json(reviews)  
+
+  } catch (error) {
+    console.error("Line 270 in the productController",error);
+    return res.status(500).json({message:"Internal Server Error"})
+  }
+});
+
+export const getAllReviewsForAdmin = asyncHandler(async (req, res) => {
+  const { page, limit } = req.query; 
+  try {
+    // Calculate skip value for pagination
+    const skip = (page - 1) * limit;
+    const reviews = await Product.aggregate([
+      // Match all products (you can add filters here if needed)
+      {
+        $match: {}
+      },
+      // Unwind the reviews array to separate each review as its own document
+      {
+        $unwind: '$reviews'
+      },
+      // Lookup to join user data with reviews
+      {
+        $lookup: {
+          from: 'users', // The name of the users collection
+          localField: 'reviews.user',
+          foreignField: '_id',
+          as: 'reviewer' // Alias for the joined user data
+        }
+      },
+      // Unwind the user (reviewer) array to get each reviewer's details
+      {
+        $unwind: {
+          path: '$reviewer',
+          preserveNullAndEmptyArrays: true // Ensure null for products without reviews
+        }
+      },
+      // Project only the necessary fields
+      {
+        $project: {
+          productId: '$_id',
+          productName: '$name',
+          reviewId: '$reviews._id',
+          userId: '$reviewer._id',
+          userName: '$reviewer.name',
+          userEmail: '$reviewer.email',
+          rating: '$reviews.rating',
+          comment: '$reviews.comment',
+          date: '$reviews.createdAt'
+        }
+      },
+      // Optional: Sort reviews by creation date (descending)
+      {
+        $sort: { 'reviews.createdAt': -1 }
+      },
+      // Skip the reviews that belong to previous pages
+      {
+        $skip: skip
+      },
+      // Limit the number of reviews per page
+      {
+        $limit: parseInt(limit)
+      }
+    ]);
+
+    // Fetch the total count of reviews to calculate total pages
+    const totalReviews = await Product.aggregate([
+      { $unwind: '$reviews' },
+      { $count: 'totalReviews' }
+    ]);
+
+    const totalReviewsCount = totalReviews.length > 0 ? totalReviews[0].totalReviews : 0;
+    const totalPages = Math.ceil(totalReviewsCount / limit);
+
+    // If no reviews are found, return a 404 error
+    if (reviews.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No reviews found for any products'
+      });
+    }
+
+    // Return the paginated reviews along with pagination info
+    return res.status(200).json({
+      success: true,
+      reviews,
+      totalReviews: totalReviewsCount,
+      totalPages,
+      currentPage: parseInt(page)
+    });
+  } catch (error) {
+    console.error('Error in aggregation pipeline', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    });
+  }
+});
+
          
