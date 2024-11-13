@@ -42,6 +42,28 @@ export const getAdminProducts = asyncHandler(async(req,res,next)=>{
      })
 });
 
+export const getFeaturedProducts = asyncHandler(async(req,res)=>{
+  try {
+    const featuredProducts = await Product.aggregate([
+      { $sample: { size: 10 } }, // Randomly select 10 products
+      {
+          $project: {
+              _id: 1,
+              name: 1,
+              price: 1,
+              rating: 1,
+              numOfReviews: 1,
+              images: { $slice: ["$images", 1] } // Include only the first image
+          },
+      },
+    ])
+
+    res.status(200).json({success:true,products:featuredProducts});
+  } catch (error) {
+    console.error("Internal Server Error:", error);
+    return next(new ErrorHandler("Internal Server Error", 500));
+  }
+})
 export const getAllProducts = asyncHandler(async(req,res,next)=>{
    // return next(new ErrorHandler("This is an error message",404));
    const resultPerPage = 8;
