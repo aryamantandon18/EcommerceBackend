@@ -30,6 +30,12 @@ const productSchema = mongoose.Schema({
             }
         }
     ],
+    videos:[
+        {
+            public_id:{type: String},
+            src:{type: String}
+        }
+    ],
     category:{
         type:String,
         required:[true,"Please enter the product category"]

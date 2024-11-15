@@ -3,35 +3,85 @@ import Product from "../models/product.js";
 import {asyncHandler} from '../middleWares/AsyncErr.js'
 import ApiFeatures from "../utils/apiFeatures.js";
 import cloudinary from 'cloudinary';
+import fs from 'fs';
+import { Readable } from "stream";
 
-export const newProduct = asyncHandler(async(req,res,next)=>{
-  let images = [];
-  if(typeof req.body.images == 'string'){
-   images.push(req.body.images);
-  }else{
-   images = req.body.images;
-  }
-  const imagesLinks=[];
-  for(let i=0;i<images.length;i++){
-   const result = await cloudinary.v2.uploader.upload(images[i],{
-      folder:"products",
-   });
+export const newProduct = asyncHandler(async (req, res) => {
+  try {
+    // Step 1: Parse the form data (using multer or any file upload middleware)
+    console.log("Body -",req.body);
+    console.log("Files - ",req.files);
+    const { name, description, price, category,stock } = req.body;
+    if (!req.files || !req.files.images || !req.files.videos) {
+      return res.status(400).json({ success: false, message: 'Please upload images and videos.' });
+    }
+    const images = Array.isArray(req.files.images) ? req.files.images : [req.files.images].filter(Boolean);
+    const videos = Array.isArray(req.files.videos) ? req.files.videos : [req.files.videos].filter(Boolean);
 
-   imagesLinks.push({
-      public_id: result.public_id,
-      url:result.secure_url,
-   })
-  }
-  req.body.images = imagesLinks;
-//   -----------------------------------------------------------------------------
-   req.body.user = req.user.id;
-   const product = await Product.create(req.body);
-   res.status(201).json({
-      success:true,
+    // Step 2: Create the product instance
+    const product = await Product.create({ name, description, price, category,stock });
+    const productId = product._id;
+
+    // if(typeof videos === "string"){ videos = [videos]}
+ // Step 3: Upload images to Cloudinary
+ const imageLinks = await Promise.all(
+  images.map((image) => {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.v2.uploader.upload_stream(
+        { folder: `ecmm/products/images/${productId}`, resource_type: 'image' },
+        (error, result) => {
+          if (error) {
+            reject(error); // Reject if there's an error
+          } else {
+            resolve({ public_id: result.public_id, url: result.secure_url }); // Resolve with the result
+          }
+        }
+      );
+      const bufferStream = new Readable();
+      bufferStream.push(image.buffer);
+      bufferStream.push(null); // Indicate end of stream
+      bufferStream.pipe(uploadStream);
+    });
+  })
+);
+
+// Step 4: Upload videos to Cloudinary
+const videoLinks = await Promise.all(
+  videos.map((video, index) => {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.v2.uploader.upload_stream(
+        { folder: `ecmm/products/videos/${productId}`, resource_type: 'video', public_id: `video_${index + 1}` },
+        (error, result) => {
+          if (error) {
+            reject(error); // Reject if there's an error
+          } else {
+            resolve({ public_id: result.public_id, src: result.secure_url }); // Resolve with the result
+          }
+        }
+      );
+      const bufferStream = new Readable();
+      bufferStream.push(video.buffer);
+      bufferStream.push(null); // Indicate end of stream
+      bufferStream.pipe(uploadStream);
+    });
+  })
+);
+
+    // Step 5: Update the product with media links
+    product.images = imageLinks;
+    product.videos = videoLinks;
+    await product.save();
+
+    res.status(201).json({
+      success: true,
       product,
-   })
-
+    });
+  } catch (error) {
+    console.error('Error creating product:', error);
+    res.status(500).json({ success: false, message: 'Failed to create product' });
+  }
 });
+
 //Get All products for Admin
 export const getAdminProducts = asyncHandler(async(req,res,next)=>{
  const products = await Product.find();
