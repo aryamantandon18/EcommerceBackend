@@ -1,8 +1,8 @@
 import express from 'express'
-import { createProductReview, deleteProduct, deleteReviews, getAdminProducts, getAllProducts, getAllReviews, getAllReviewsForAdmin, getFeaturedProducts, getProductById, getReviewsByUserId, newProduct, updateProduct } from '../controllers/product.js';
+import { createProductReview, deleteProduct, deleteReviewForAdmin, deleteReviews, getAdminProducts, getAllProducts, getAllReviews, getAllReviewsForAdmin, getFeaturedProducts, getProductById, getReviewsByUserId, newProduct, updateProduct } from '../controllers/product.js';
 import { authorizeRole, isAuthenticated } from '../middleWares/auth.js';
 import multer from 'multer';
-import fs from 'fs';
+// import fs from 'fs';
 
 const router = express.Router();
 
@@ -47,11 +47,13 @@ router.route("/admin/product/:id")
 .delete(isAuthenticated,authorizeRole("Admin"),deleteProduct)
 
 router.get("/product/:id",getProductById);
-router.route("/product/review").put(isAuthenticated,createProductReview);
-router.route("/product/reviews")
-.get(getAllReviews)
-.delete(isAuthenticated,deleteReviews);
+// router.route("/product/review").put(isAuthenticated,createProductReview);
+// router.route("/product/reviews")
+// .get(getAllReviews)
+// .delete(isAuthenticated,deleteReviews);
 router.get("/getReviewsForUser/:userId", isAuthenticated, getReviewsByUserId);
-router.post("/admin/products/reviews",getAllReviewsForAdmin);
+router.post("/admin/reviews",isAuthenticated,getAllReviewsForAdmin);
+router.delete("/admin/review/:id",isAuthenticated,deleteReviewForAdmin);
+  
 
 export default router

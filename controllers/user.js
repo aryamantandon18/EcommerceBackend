@@ -7,14 +7,30 @@ import ErrorHandler from "../middleWares/error.js";
 import sendEmail from "../utils/sendEmail.js";
 import cloudinary from 'cloudinary';
 
+const uploadToCloudinary = (fileBuffer) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.v2.uploader.upload_stream(
+      {
+        folder: "avatars",
+        width: 150,
+        crop: "scale",
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);  // Reject if there is an error
+        } else {
+          resolve(result);  // Resolve with the result from Cloudinary
+        }
+      }
+    );
+    uploadStream.end(fileBuffer);  // Send the file buffer to Cloudinary
+  });
+};
 export const register = asyncHandler(async(req,res,next)=>{
-const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
-  folder:"avatars",
-  width:150,
-  crop:"scale"
-})
+  console.log("Line 11",req.file);
+const myCloud = await uploadToCloudinary(req.file.buffer);
 
-   const {name,email,password,role} = req.body;
+  const {name,email,password,role} = req.body;
   let user = await Users.findOne({email})
 
   if(user){
@@ -33,7 +49,6 @@ const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
 
  sendCookie(res,user,"Registered Successfully")
  } )
-
 
 
 export const Login = async(req,res,next)=>{

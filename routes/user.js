@@ -1,10 +1,14 @@
 import express from 'express'
 import { Login, deleteUser, forgotPassword, getAllUsers, getMyProfile, getUserById, logout, register, updatePassword, updateProfile, updateRole ,resetPassword} from '../controllers/user.js';
 import { authorizeRole, isAuthenticated } from '../middleWares/auth.js';
+import multer from 'multer';
 
  const router = express.Router();
+
+ const storage = multer.memoryStorage(); // Using memoryStorage so file can be uploaded directly to Cloudinary
+const upload = multer({ storage: storage });
  
-router.post("/new",register);
+router.post("/new",upload.single("avatar"),register);
 router.post("/login",Login);
 router.get("/me",isAuthenticated,getMyProfile);
 router.post("/password/forgot",forgotPassword); 

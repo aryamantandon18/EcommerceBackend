@@ -5,6 +5,7 @@ import ApiFeatures from "../utils/apiFeatures.js";
 import cloudinary from 'cloudinary';
 import fs from 'fs';
 import { Readable } from "stream";
+import mongoose from "mongoose";
 
 export const newProduct = asyncHandler(async (req, res) => {
   try {
@@ -435,4 +436,28 @@ export const getAllReviewsForAdmin = asyncHandler(async (req, res) => {
   }
 });
 
-         
+export const deleteReviewForAdmin = asyncHandler(async (req, res) => {
+  try {
+    const reviewId = req.params.id; 
+    const result = await Product.updateMany(
+      { 'reviews._id': new mongoose.Types.ObjectId(reviewId) }, // Cast the reviewId to ObjectId
+      { $pull: { reviews: { _id: new mongoose.Types.ObjectId(reviewId) } } } // Pull the review from the array
+    );
+    if (result.nModified === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Review not found or already deleted',
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: 'Review deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error deleting review', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+    });
+  }
+});

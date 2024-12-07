@@ -105,13 +105,13 @@ async function updateStock(id,quantity){
     await product.save({validateBeforeSave:false});
 }
 //admin
-export const deleteOrder = asyncHandler(async(req,res,next)=>{
-    Order.findOneAndDelete(req.params.id,(err)=>{
-     if(err){
-        return next(new ErrorHandler("order not found",404));
-     }
-    })
-    res.status(200).json({
-        success:true
-    })
-})
+export const deleteOrder = asyncHandler(async (req, res, next) => {
+    try {
+    const order = await Order.findOneAndDelete({ _id: req.params.id });
+    if (!order) return next(new ErrorHandler("Order not found", 404));
+  
+    res.status(200).json({ success: true });
+    } catch (err) {
+    return next(new ErrorHandler("Server Error", 500));
+  }
+  });

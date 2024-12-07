@@ -9,11 +9,10 @@ import https from 'https';
 
 
 const totalCPUs = os.cpus().length;
-console.log("Number of CPUs:", totalCPUs);
 
 // Cluster setup to handle multiple processes for better CPU utilization
-if (cluster.isPrimary) {              // peimary process also called as master 
-    console.log(`Primary process ${process.pid} is running`);
+if (cluster.isPrimary) {              // primary process also called as master 
+    // console.log(`Primary process ${process.pid} is running`);
 
     // Fork workers for each CPU core
     for (let i = 0; i < totalCPUs; i++) {
