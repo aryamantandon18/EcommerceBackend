@@ -48,7 +48,7 @@ const myCloud = await uploadToCloudinary(req.file.buffer);
   });
 
  sendCookie(res,user,"Registered Successfully")
- } )
+ })
 
 
 export const Login = async(req,res,next)=>{

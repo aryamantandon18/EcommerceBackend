@@ -3,7 +3,6 @@ import Product from "../models/product.js";
 import {asyncHandler} from '../middleWares/AsyncErr.js'
 import ApiFeatures from "../utils/apiFeatures.js";
 import cloudinary from 'cloudinary';
-import fs from 'fs';
 import { Readable } from "stream";
 import mongoose from "mongoose";
 
@@ -13,9 +12,7 @@ export const newProduct = asyncHandler(async (req, res) => {
     console.log("Body -",req.body);
     console.log("Files - ",req.files);
     const { name, description, price, category,stock } = req.body;
-    if (!req.files || !req.files.images || !req.files.videos) {
-      return res.status(400).json({ success: false, message: 'Please upload images and videos.' });
-    }
+
     const images = Array.isArray(req.files.images) ? req.files.images : [req.files.images].filter(Boolean);
     const videos = Array.isArray(req.files.videos) ? req.files.videos : [req.files.videos].filter(Boolean);
 
@@ -145,55 +142,92 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
        return next(new ErrorHandler("Product not found", 404));
      }
  
-     let images = [];
-     if (typeof req.body.images === 'string') {
-       images.push(req.body.images);
-     } else if (Array.isArray(req.body.images)) {
-       images = req.body.images;
-     }
+     const images = Array.isArray(req.files?.images) ? req.files.images : [req.files?.images].filter(Boolean);
+     const videos = Array.isArray(req.files?.videos) ? req.files.videos : [req.files?.videos].filter(Boolean);
  
      if (images.length > 0) {
-       // Deleting old images from Cloudinary
-       for (let i = 0; i < product.images.length; i++) {
-         try {
-           await cloudinary.v2.uploader.destroy(product.images[i].public_id);
-         } catch (error) {
-           console.error("Error deleting image:", error);
-         }
-       }
- 
-       const imagesLinks = [];
-       for (let i = 0; i < images.length; i++) {
-         try {
-           if (typeof images[i] === 'string') {
-             const result = await cloudinary.v2.uploader.upload(images[i], {
-               folder: "products",
-             });
-             imagesLinks.push({
-               public_id: result.public_id,
-               url: result.secure_url,
-             });
-           } else {
-             console.error("Invalid image format:", images[i]);
-           }
-         } catch (error) {
-           console.error("Error uploading image:", error);
-         }
-       }
-       req.body.images = imagesLinks;
-     }
- 
-     product = await Product.findByIdAndUpdate(req.params.id, req.body, {
-       new: true,
-       runValidators: true,
-       useFindAndModify: false,
-     });
- 
-     res.status(200).json({
-       success: true,
-       message: "Product updated",
-       product,
-     });
+      for (let image of product.images) {
+        try {
+          await cloudinary.v2.uploader.destroy(image.public_id, { resource_type: "image" });
+        } catch (error) {
+          console.error("Error deleting old image:", error);
+        }
+      }
+    }
+
+    // Step 4: Delete old videos from Cloudinary
+    if (videos.length > 0) {
+      for (let video of product.videos) {
+        try {
+          await cloudinary.v2.uploader.destroy(video.public_id, { resource_type: "video" });
+        } catch (error) {
+          console.error("Error deleting old video:", error);
+        }
+      }
+    }
+    const imageLinks = await Promise.all(
+      images.map((image) => {
+        return new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.v2.uploader.upload_stream(
+            { folder: `ecmm/products/images/${product._id}`, resource_type: "image" },
+            (error, result) => {
+              if (error) {
+                reject(error);
+              } else {
+                resolve({ public_id: result.public_id, url: result.secure_url });
+              }
+            }
+          );
+          const bufferStream = new Readable();
+          bufferStream.push(image.buffer);
+          bufferStream.push(null); // End of stream
+          bufferStream.pipe(uploadStream);
+        });
+      })
+    );
+
+    // Step 6: Upload new videos to Cloudinary
+    const videoLinks = await Promise.all(
+      videos.map((video, index) => {
+        return new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.v2.uploader.upload_stream(
+            { folder: `ecmm/products/videos/${product._id}`, resource_type: "video", public_id: `video_${index + 1}` },
+            (error, result) => {
+              if (error) {
+                reject(error);
+              } else {
+                resolve({ public_id: result.public_id, url: result.secure_url });
+              }
+            }
+          );
+          const bufferStream = new Readable();
+          bufferStream.push(video.buffer);
+          bufferStream.push(null); // End of stream
+          bufferStream.pipe(uploadStream);
+        });
+      })
+    );
+
+    // Step 7: Update product details
+    const updatedData = {
+      ...req.body,
+      images: imageLinks.length > 0 ? imageLinks : product.images,
+      videos: videoLinks.length > 0 ? videoLinks : product.videos,
+    };
+
+    product = await Product.findByIdAndUpdate(req.params.id, updatedData, {
+      new: true,
+      runValidators: true,
+      useFindAndModify: false,
+    });
+
+    // Step 8: Send response
+    res.status(200).json({
+      success: true,
+      message: "Product updated successfully",
+      product,
+    });
+
    } catch (error) {
      console.error("Internal Server Error:", error);
      return next(new ErrorHandler("Internal Server Error", 500));

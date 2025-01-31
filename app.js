@@ -3,25 +3,34 @@ import userRouter from'./routes/user.js'
 import productRouter from './routes/product.js'
 import {config} from 'dotenv'
 import cookieParser from 'cookie-parser';
-import bodyParser from 'body-parser';
 import ErrorHandler, { errorMiddleWare } from './middleWares/error.js';
 import orderRouter from './routes/order.js'
 import paymentRouter from './routes/paymentRoutes.js'
+import helmet from 'helmet'; // Adds security-related HTTP headers
+import rateLimit from 'express-rate-limit'; // Rate-limiting middleware
+import cors from 'cors'
+import compression from 'compression';  //This will enable GZIP which makes your HTTP responses smaller.
 
 export const app = express();
-import cors from 'cors'
-import fileUpload from 'express-fileupload';
-
 config({
     path:"./data/config.env",
 });
 
 //using middleware
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({extended:true, limit: '50mb' }))
+app.use(helmet());
+
+// Rate limiting to prevent brute-force attacks
+const limiter = rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later',
+  });
+app.use(limiter);
+  
+app.use(express.json({ limit: '50mb' }));    // Stores the parsed data in req.body. alternative- app.use(bodyParser)
+app.use(express.urlencoded({extended:true, limit: '50mb' })) //alternative - app.use(bodyParser.urlencoded({extended:true,limit: '50mb'}));
 app.use(cookieParser());
-app.use(bodyParser.urlencoded({extended:true})); // so that we can access data from req.body 
-// app.use(fileUpload());
+app.use(compression());
 
 app.use(cors({
     origin:`${process.env.frontend_uri}`,                // Specify the allowed origins
@@ -42,6 +51,36 @@ app.use(errorMiddleWare);
 app.all('*',(req,res,next)=>{
  return next(new ErrorHandler(`Can't find ${req.originalUrl} on the server!`,404))
 })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // import { fileURLToPath } from 'url';
 // import path from 'path';
