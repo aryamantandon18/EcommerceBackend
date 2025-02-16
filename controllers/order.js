@@ -84,12 +84,13 @@ export const updateOrder = asyncHandler(async(req,res,next)=>{
     if(order.orderStatus === 'Delivered'){
         return next(new ErrorHandler('You have already delivered this order',400));
     }
-    if(req.body.status === "shipped"){
+    if(req.body.status === "Shipped"){
         order.orderItems.forEach(async(o)=>{
             await updateStock(o.product,o.quantity);
         })
     }
    order.orderStatus = req.body.status;
+   order.shippingInfo.address = req.body.address;
    if(req.body.status === 'Delivered'){
     order.deliveredAt = Date.now();
    }

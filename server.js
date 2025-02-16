@@ -21,13 +21,13 @@ if (cluster.isPrimary) {              // primary process also called as master
 
     // Listen for worker exits and restart them
     cluster.on('exit', (worker, code, signal) => {
-        console.log(`Worker ${worker.process.pid} exited with code ${code}. Restarting...`);
+        // console.log(`Worker ${worker.process.pid} exited with code ${code}. Restarting...`);
         cluster.fork();
     });
 } else {
     const port = process.env.PORT || 3000;
     const server = app.listen(port, () => {
-        console.log(`Worker ${process.pid} is listening on port ${port} in ${process.env.NODE_ENV} mode`);
+        // console.log(`Worker ${process.pid} is listening on port ${port} in ${process.env.NODE_ENV} mode`);
     });
 
     // Handle unhandled promise rejections

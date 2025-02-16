@@ -302,7 +302,6 @@ export const createProductReview = asyncHandler(async(req,res,next)=>{
 });
 
 export const getAllReviews = asyncHandler(async(req,res,next)=>{
-
    const product = await Product.findById(req.query.productId);
    if(!product){
       return next(new ErrorHandler("Product not found",404));
@@ -346,6 +345,164 @@ await Product.findByIdAndUpdate(req.query.productId,{
      })
 })
 
+export const getAllReviewsForAdmin = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 10 } = req.query; // Pagination from query params
+  const { username, rating, productId } = req.body; // Filters from the request body
+
+  try {
+    // Calculate skip value for pagination
+    const skip = (page - 1) * limit;
+
+    // Build dynamic filter for the reviews
+    const matchFilter = {};
+
+    // Filter by productId if provided
+    if (productId) {
+      matchFilter['_id'] = productId;  // Filter by product ID
+    }
+
+    // Filter by username in the reviewer's name (case-insensitive)
+    if (username) {
+      matchFilter['reviews.name'] = { $regex: username, $options: 'i' };  // Case-insensitive search
+    }
+
+    // Filter by rating if provided
+    if (rating) {
+      matchFilter['reviews.rating'] = parseInt(rating);  // Filter by review rating
+    }
+     // Aggregation pipeline to get reviews with the provided filters
+    const reviews = await Product.aggregate([
+      {$unwind: '$reviews'},  // Unwind the reviews array to treat each review as an individual document 
+      {$match: matchFilter }, // Apply the dynamic filter here
+      {
+        $lookup: {
+          from: 'users',  // Join with users collection to get reviewer details
+          localField: 'reviews.user',
+          foreignField: '_id',
+          as: 'reviewer'
+        }
+      },
+      {
+        $unwind: {
+          path: '$reviewer',
+          preserveNullAndEmptyArrays: true  // Handle products without reviews
+        }
+      },
+      { 
+        $project: {
+          productId: '$_id',
+          productName: '$name',
+          reviewId: '$reviews._id',
+          userId: '$reviewer._id',
+          userName: '$reviewer.name',
+          userEmail: '$reviewer.email',
+          rating: '$reviews.rating',
+          comment: '$reviews.comment',
+          date: '$reviews.createdAt',
+          reviewName: '$reviews.name' 
+        }
+      },
+      {
+        $sort: { 'reviews.createdAt': -1 }  // Sort by review creation date (descending)
+      },
+      {
+        $skip: skip  // Skip for pagination
+      },
+      {
+        $limit: parseInt(limit)  // Limit results per page
+      }
+    ]);
+    
+    const totalReviews = await Product.aggregate([
+      { $unwind: '$reviews' },
+      {
+        $match: matchFilter  // Apply the same filter for the total count
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'reviews.user',
+          foreignField: '_id',
+          as: 'reviewer'
+        }
+      },
+      {
+        $unwind: {
+          path: '$reviewer',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: {
+          productName: '$name',
+          userName: '$reviewer.name',
+          userEmail: '$reviewer.email',
+          rating: '$reviews.rating',
+          date: '$reviews.createdAt'
+        }
+      },
+      {
+        $count: 'totalReviews'  // Get the total count
+      }
+    ]);
+
+    const totalReviewsCount = totalReviews.length > 0 ? totalReviews[0].totalReviews : 0;
+    const totalPages = Math.ceil(totalReviewsCount / limit);  // Calculate total pages
+
+    // If no reviews found, return 404
+    if (reviews.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No reviews found with the provided filters'
+      });
+    }
+
+    // Return the reviews along with pagination info
+    return res.status(200).json({
+      success: true,
+      reviews,
+      totalReviews: totalReviewsCount,
+      totalPages,
+      currentPage: parseInt(page)
+    });
+  } catch (error) {
+    console.error('Error fetching reviews', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    });
+  }
+});
+
+
+export const deleteReviewForAdmin = asyncHandler(async (req, res) => {
+  try {
+    const reviewId = req.params.id; 
+    const result = await Product.updateMany(
+      { 'reviews._id': new mongoose.Types.ObjectId(reviewId) }, // Cast the reviewId to ObjectId
+      { $pull: { reviews: { _id: new mongoose.Types.ObjectId(reviewId) } } } // Pull the review from the array
+    );
+    if (result.nModified === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Review not found or already deleted',
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: 'Review deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error deleting review', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+    });
+  }
+});
+
+
+
 export const getReviewsByUserId = asyncHandler(async(req,res)=>{
   const {userId} = req.params;
   try {
@@ -375,123 +532,5 @@ export const getReviewsByUserId = asyncHandler(async(req,res)=>{
   } catch (error) {
     console.error("Line 270 in the productController",error);
     return res.status(500).json({message:"Internal Server Error"})
-  }
-});
-
-export const getAllReviewsForAdmin = asyncHandler(async (req, res) => {
-  const { page, limit } = req.query; 
-  try {
-    // Calculate skip value for pagination
-    const skip = (page - 1) * limit;
-    const reviews = await Product.aggregate([
-      // Match all products (you can add filters here if needed)
-      {
-        $match: {}
-      },
-      // Unwind the reviews array to separate each review as its own document
-      {
-        $unwind: '$reviews'
-      },
-      // Lookup to join user data with reviews
-      {
-        $lookup: {
-          from: 'users', // The name of the users collection
-          localField: 'reviews.user',
-          foreignField: '_id',
-          as: 'reviewer' // Alias for the joined user data
-        }
-      },
-      // Unwind the user (reviewer) array to get each reviewer's details
-      {
-        $unwind: {
-          path: '$reviewer',
-          preserveNullAndEmptyArrays: true // Ensure null for products without reviews
-        }
-      },
-      // Project only the necessary fields
-      {
-        $project: {
-          productId: '$_id',
-          productName: '$name',
-          reviewId: '$reviews._id',
-          userId: '$reviewer._id',
-          userName: '$reviewer.name',
-          userEmail: '$reviewer.email',
-          rating: '$reviews.rating',
-          comment: '$reviews.comment',
-          date: '$reviews.createdAt'
-        }
-      },
-      // Optional: Sort reviews by creation date (descending)
-      {
-        $sort: { 'reviews.createdAt': -1 }
-      },
-      // Skip the reviews that belong to previous pages
-      {
-        $skip: skip
-      },
-      // Limit the number of reviews per page
-      {
-        $limit: parseInt(limit)
-      }
-    ]);
-
-    // Fetch the total count of reviews to calculate total pages
-    const totalReviews = await Product.aggregate([
-      { $unwind: '$reviews' },
-      { $count: 'totalReviews' }
-    ]);
-
-    const totalReviewsCount = totalReviews.length > 0 ? totalReviews[0].totalReviews : 0;
-    const totalPages = Math.ceil(totalReviewsCount / limit);
-
-    // If no reviews are found, return a 404 error
-    if (reviews.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'No reviews found for any products'
-      });
-    }
-
-    // Return the paginated reviews along with pagination info
-    return res.status(200).json({
-      success: true,
-      reviews,
-      totalReviews: totalReviewsCount,
-      totalPages,
-      currentPage: parseInt(page)
-    });
-  } catch (error) {
-    console.error('Error in aggregation pipeline', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal Server Error'
-    });
-  }
-});
-
-export const deleteReviewForAdmin = asyncHandler(async (req, res) => {
-  try {
-    const reviewId = req.params.id; 
-    const result = await Product.updateMany(
-      { 'reviews._id': new mongoose.Types.ObjectId(reviewId) }, // Cast the reviewId to ObjectId
-      { $pull: { reviews: { _id: new mongoose.Types.ObjectId(reviewId) } } } // Pull the review from the array
-    );
-    if (result.nModified === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Review not found or already deleted',
-      });
-    }
-    return res.status(200).json({
-      success: true,
-      message: 'Review deleted successfully',
-    });
-  } catch (error) {
-    console.error('Error deleting review', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal Server Error',
-    });
   }
 });

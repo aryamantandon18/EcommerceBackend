@@ -30,6 +30,7 @@ const storage = multer.memoryStorage();
 
 router.get("/products",getAllProducts);
 router.get("/products/featuredProducts",getFeaturedProducts);
+router.route("/product/review").put(isAuthenticated,createProductReview);
 router.get("/admin/products",isAuthenticated,authorizeRole("Admin"),getAdminProducts);
 
 router.post("/admin/product/new",isAuthenticated,authorizeRole("Admin"),uploadFields,newProduct);
@@ -49,7 +50,7 @@ export default router
 
 
 
-// router.route("/product/review").put(isAuthenticated,createProductReview);
+
 // router.route("/product/reviews")
 // .get(getAllReviews)
 // .delete(isAuthenticated,deleteReviews);
