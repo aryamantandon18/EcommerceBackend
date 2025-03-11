@@ -1,5 +1,5 @@
 import express from 'express'
-import { createProductReview, deleteProduct, deleteReviewForAdmin, deleteReviews, getAdminProducts, getAllProducts, getAllReviews, getAllReviewsForAdmin, getFeaturedProducts, getProductById, getReviewsByUserId, newProduct, updateProduct } from '../controllers/product.js';
+import { createProductReview, deleteProduct,deleteReviewForAdmin,editReviewForAdmin,getAdminProducts, getAllProducts, getAllReviewsForAdmin, getFeaturedProducts, getProductById,newProduct, updateProduct } from '../controllers/product.js';
 import { authorizeRole, isAuthenticated } from '../middleWares/auth.js';
 import multer from 'multer';
 // import fs from 'fs';
@@ -40,9 +40,10 @@ router.route("/admin/product/:id")
 .delete(isAuthenticated,authorizeRole("Admin"),deleteProduct)
 
 router.get("/product/:id",getProductById);
-router.get("/getReviewsForUser/:userId", isAuthenticated, getReviewsByUserId);
 router.post("/admin/reviews",isAuthenticated,getAllReviewsForAdmin);
-router.delete("/admin/review/:id",isAuthenticated,deleteReviewForAdmin);
+router.route("/admin/review/:id")
+.delete(isAuthenticated,deleteReviewForAdmin)
+.put(isAuthenticated,editReviewForAdmin);
   
 
 export default router

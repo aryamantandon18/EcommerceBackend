@@ -5,7 +5,6 @@ import Razorpay from 'razorpay';
 import cluster from 'cluster';
 import os from 'os';
 import https from 'https';
-// import Redis from 'ioredis';
 
 
 const totalCPUs = os.cpus().length;

@@ -27,9 +27,8 @@ const uploadToCloudinary = (fileBuffer) => {
   });
 };
 export const register = asyncHandler(async(req,res,next)=>{
-  console.log("Line 11",req.file);
+  // console.log("Line 11",req.file);
 const myCloud = await uploadToCloudinary(req.file.buffer);
-
   const {name,email,password,role} = req.body;
   let user = await Users.findOne({email})
 
@@ -39,7 +38,7 @@ const myCloud = await uploadToCloudinary(req.file.buffer);
       message:"User already exist",
     })
   }
-  // const hashedPassword = await bcrypt.hash(password,10);
+
   user = await Users.create({name,email,password,
   avatar:{
     public_id:myCloud.public_id,
@@ -73,11 +72,6 @@ export const Login = async(req,res,next)=>{
     message: "invalid password or email"})
   };
   sendCookie(res,user,`Welcome Back, ${user.name}`)
-
-  // res.status(200).json({
-  //   success:true,
-  //   user
-  // })
   
  } catch (error) {
   return next(new ErrorHandler(error.message, 500));
@@ -108,7 +102,7 @@ export const logout = (req,res) => {
  
 //Forgot password 
 export const forgotPassword = asyncHandler(async(req,res,next)=>{ 
- const user = await Users.findOne({email: req.body.email});    //jab forgot pswd krega toh email toh daalega 
+ const user = await Users.findOne({email: req.body.email});   
  if(!user){
   return next(new ErrorHandler("user not found ", 404));
  }

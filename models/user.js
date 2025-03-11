@@ -22,7 +22,6 @@ const schema = new mongoose.Schema({
          required: true,
      },
      avatar:{
-        
             public_id:{
                 type:String,
                 required:true,
@@ -31,7 +30,6 @@ const schema = new mongoose.Schema({
                 type:String,
                 required:true
             }
-        
      },
      role:{
         type:String,

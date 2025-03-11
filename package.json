@@ -10,7 +10,7 @@
   "scripts": {
     "start": "start.bat",
     "dev": "nodemon server.js",
-    "node": "node server.js",
+    "node": "node /app/server.js",
     "test": "jest"
   },
   "keywords": [],
