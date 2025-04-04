@@ -68,15 +68,15 @@ export const instance = new Razorpay({
 
 connectDB();
 
-const pingServer = () => {
-    const serverUrl = process.env.SERVER_URL || 'https://ecommercebackend-lg9q.onrender.com'; // Replace with your Render server URL
+// const pingServer = () => {
+//     const serverUrl = process.env.SERVER_URL || 'https://ecmm-nhgl.onrender.com'; // Replace with your Render server URL
 
-    https.get(serverUrl, (res) => {
-        console.log(`Self-ping successful. Status code: ${res.statusCode}`);
-    }).on('error', (err) => {
-        console.error(`Error in self-ping: ${err.message}`);
-    });
-};
+//     https.get(serverUrl, (res) => {
+//         console.log(`Self-ping successful. Status code: ${res.statusCode}`);
+//     }).on('error', (err) => {
+//         console.error(`Error in self-ping: ${err.message}`);
+//     });
+// };
 
-// Ping the server every 14 minutes (14 * 60 * 1000 ms)
-setInterval(pingServer, 14 * 60 * 1000);
+// // Ping the server every 14 minutes (14 * 60 * 1000 ms)
+// setInterval(pingServer, 14 * 60 * 1000);
