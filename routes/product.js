@@ -1,5 +1,5 @@
 import express from 'express'
-import { createProductReview, deleteProduct,deleteReviewForAdmin,editReviewForAdmin,getAdminProducts, getAllProducts, getAllReviewsForAdmin, getFeaturedProducts, getProductById,newProduct, updateProduct } from '../controllers/product.js';
+import { createProductReview, deleteProduct,deleteReviewForAdmin,editReviewForAdmin,getAdminProducts, getAllProducts, getAllReviewsForAdmin, getFeaturedProducts, getProductById,getProductsForSearchbar,newProduct, updateProduct } from '../controllers/product.js';
 import { authorizeRole, isAuthenticated } from '../middleWares/auth.js';
 import multer from 'multer';
 // import fs from 'fs';
@@ -29,6 +29,7 @@ const storage = multer.memoryStorage();
   ]);
 
 router.get("/products",getAllProducts);
+router.get("/products/suggestions",getProductsForSearchbar);
 router.get("/products/featuredProducts",getFeaturedProducts);
 router.route("/product/review").put(isAuthenticated,createProductReview);
 router.get("/admin/products",isAuthenticated,authorizeRole("Admin"),getAdminProducts);

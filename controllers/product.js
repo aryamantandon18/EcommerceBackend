@@ -105,14 +105,14 @@ export const getFeaturedProducts = asyncHandler(async(req,res)=>{
           },
       },
     ])
-
     res.status(200).json({success:true,products:featuredProducts});
   } catch (error) {
     console.error("Internal Server Error:", error);
     return next(new ErrorHandler("Internal Server Error", 500));
   }
 })
-export const getAllProducts = asyncHandler(async(req,res,next)=>{
+
+export const getAllProducts = asyncHandler(async(req,res)=>{
    // return next(new ErrorHandler("This is an error message",404));
    const resultPerPage = 8;
    const productsCount = await Product.countDocuments();
@@ -122,7 +122,7 @@ export const getAllProducts = asyncHandler(async(req,res,next)=>{
     .pagination(resultPerPage)
 
   let products = await apiFeature.query;
-    let filteredProductsCount = products.length;
+  let filteredProductsCount = products.length;
 
    //  products = await apiFeature.query;
     res.status(200).json({
@@ -134,6 +134,22 @@ export const getAllProducts = asyncHandler(async(req,res,next)=>{
         filteredProductsCount,
      })
 });
+
+export const getProductsForSearchbar = asyncHandler(async(req,res)=>{
+  const keyword = req.query.keyword;
+  if(!keyword) return res.json([]);
+
+  const products = await Product.find({
+    name:{$regex:keyword , $options:'i'}
+  }).limit(10).select('name');
+
+  res.status(200).json({
+    success:true,
+    products:products.map(p=> p.name),
+  })
+})
+
+
 
 export const updateProduct = asyncHandler(async (req, res, next) => {
    try {

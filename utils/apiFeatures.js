@@ -8,7 +8,7 @@ class ApiFeatures {
         ? {
             name: {
               $regex: this.queryStr.keyword,
-              $options: "i",            //czse insensitive
+              $options: "i",            //case insensitive
             },
           }
         : {};
