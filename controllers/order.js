@@ -71,7 +71,6 @@ export const getAllOrders = asyncHandler(async(req,res,next)=>{
         success:true,
         totalAmount,
         orders,
-        
     }) 
 })
 

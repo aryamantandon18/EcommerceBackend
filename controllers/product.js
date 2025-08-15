@@ -12,6 +12,12 @@ export const newProduct = asyncHandler(async (req, res) => {
     console.log("Body -",req.body);
     console.log("Files - ",req.files);
     const { name, description, price, category,stock } = req.body;
+    if(!name || !description || !price || !category || !stock){
+      return res.status(400).json({
+        success:false,
+        message:"All fields are required",
+      })
+    }
 
     const images = Array.isArray(req.files.images) ? req.files.images : [req.files.images].filter(Boolean);
     const videos = Array.isArray(req.files.videos) ? req.files.videos : [req.files.videos].filter(Boolean);

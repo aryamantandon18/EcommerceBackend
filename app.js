@@ -1,6 +1,7 @@
 import express from 'express';
 import userRouter from'./routes/user.js'
 import productRouter from './routes/product.js'
+import healthCheckRouter from './routes/healthCheck.js';
 import {config} from 'dotenv'
 import cookieParser from 'cookie-parser';
 import ErrorHandler, { errorMiddleWare } from './middleWares/error.js';
@@ -42,6 +43,7 @@ app.use("/users",userRouter);
 app.use(productRouter);
 app.use(orderRouter);
 app.use(paymentRouter);
+app.use(healthCheckRouter);
 
 app.get("/",(req,res)=>{
     res.send(`Hello from Express Server ${process.pid}`); 
